@@ -1,8 +1,16 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { GameState, initialGameState, Policy, GamePhase } from '@/types/game';
 
+interface RegionState {
+  name: string;
+  approval: number;
+  sentiment: 'positive' | 'neutral' | 'negative';
+  description: string;
+}
+
 interface GameContextType {
   gameState: GameState;
+  worldState: Record<string, RegionState>;
   setPlayerName: (name: string) => void;
   startCampaign: () => void;
   selectPolicy: (policy: Policy) => void;
@@ -18,12 +26,26 @@ interface GameContextType {
   setCurrentEvent: (eventId: string | undefined) => void;
   setPhase: (phase: GamePhase) => void;
   resetGame: () => void;
+  loadGameState: (state: GameState, world: Record<string, RegionState>) => void;
+  updateWorldState: (eventCategory: string, approvalChange: number) => void;
+  goToTitle: () => void;
 }
+
+const initialWorldState: Record<string, RegionState> = {
+  north_america: { name: 'North America', approval: 50, sentiment: 'neutral', description: 'Allied nations' },
+  south_america: { name: 'South America', approval: 50, sentiment: 'neutral', description: 'Trade partners' },
+  europe: { name: 'Europe', approval: 50, sentiment: 'neutral', description: 'NATO allies' },
+  africa: { name: 'Africa', approval: 50, sentiment: 'neutral', description: 'Developing relations' },
+  asia: { name: 'Asia', approval: 50, sentiment: 'neutral', description: 'Economic competitors' },
+  middle_east: { name: 'Middle East', approval: 50, sentiment: 'neutral', description: 'Complex relations' },
+  oceania: { name: 'Oceania', approval: 50, sentiment: 'neutral', description: 'Pacific allies' },
+};
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [gameState, setGameState] = useState<GameState>(initialGameState);
+  const [worldState, setWorldState] = useState<Record<string, RegionState>>(initialWorldState);
 
   const setPlayerName = useCallback((name: string) => {
     setGameState(prev => ({ ...prev, playerName: name }));
@@ -96,7 +118,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const advanceDay = useCallback(() => {
-    setGameState(prev => ({ ...prev, daysInOffice: prev.daysInOffice + 30 }));
+    // Day by day simulation
+    setGameState(prev => ({ ...prev, daysInOffice: prev.daysInOffice + 1 }));
   }, []);
 
   const completeEvent = useCallback((eventId: string) => {
@@ -116,12 +139,53 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetGame = useCallback(() => {
     setGameState(initialGameState);
+    setWorldState(initialWorldState);
+  }, []);
+
+  const loadGameState = useCallback((state: GameState, world: Record<string, RegionState>) => {
+    setGameState(state);
+    setWorldState(world || initialWorldState);
+  }, []);
+
+  const updateWorldState = useCallback((eventCategory: string, approvalChange: number) => {
+    setWorldState(prev => {
+      const newState = { ...prev };
+      
+      // Different events affect different regions
+      const regionEffects: Record<string, string[]> = {
+        diplomacy: ['europe', 'asia', 'middle_east'],
+        crisis: ['north_america', 'europe'],
+        opportunity: ['north_america', 'south_america', 'oceania'],
+        domestic: ['north_america'],
+      };
+
+      const affectedRegions = regionEffects[eventCategory] || ['north_america'];
+      
+      affectedRegions.forEach(region => {
+        if (newState[region]) {
+          const newApproval = Math.min(100, Math.max(0, newState[region].approval + approvalChange / 2));
+          newState[region] = {
+            ...newState[region],
+            approval: Math.round(newApproval),
+            sentiment: newApproval > 60 ? 'positive' : newApproval < 40 ? 'negative' : 'neutral',
+          };
+        }
+      });
+
+      return newState;
+    });
+  }, []);
+
+  const goToTitle = useCallback(() => {
+    // Don't reset game state, just change phase to title
+    setGameState(prev => ({ ...prev, phase: 'title' }));
   }, []);
 
   return (
     <GameContext.Provider
       value={{
         gameState,
+        worldState,
         setPlayerName,
         startCampaign,
         selectPolicy,
@@ -137,6 +201,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentEvent,
         setPhase,
         resetGame,
+        loadGameState,
+        updateWorldState,
+        goToTitle,
       }}
     >
       {children}

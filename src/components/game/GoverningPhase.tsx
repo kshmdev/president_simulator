@@ -1,15 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
-import { getEventById, governmentEvents } from '@/data/events';
+import { useAuth } from '@/hooks/useAuth';
+import { useGameSave } from '@/hooks/useGameSave';
+import { getEventById } from '@/data/events';
 import { EventChoice } from '@/types/game';
+import WorldMap from './WorldMap';
+import NewsTicker from './NewsTicker';
 
 const GoverningPhase: React.FC = () => {
-  const { gameState, updateApproval, completeEvent, setCurrentEvent, advanceDay, setPhase } = useGame();
-  const { playerName, approvalRating, daysInOffice, currentEventId, eventsCompleted } = gameState;
+  const { 
+    gameState, 
+    worldState, 
+    updateApproval, 
+    completeEvent, 
+    setCurrentEvent, 
+    advanceDay, 
+    setPhase, 
+    goToTitle,
+    updateWorldState 
+  } = useGame();
+  const { user } = useAuth();
+  const { saveGame } = useGameSave();
+  const { playerName, approvalRating, daysInOffice, currentEventId } = gameState;
 
   const [selectedChoice, setSelectedChoice] = useState<EventChoice | null>(null);
   const [showConsequence, setShowConsequence] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const currentEvent = currentEventId ? getEventById(currentEventId) : null;
 
@@ -24,13 +41,18 @@ const GoverningPhase: React.FC = () => {
     setSelectedChoice(choice);
     setShowConsequence(true);
     updateApproval(choice.approvalChange);
+    
+    // Update world state based on event category
+    if (currentEvent) {
+      updateWorldState(currentEvent.category, choice.approvalChange);
+    }
   };
 
   const handleContinue = () => {
     if (!currentEventId || !selectedChoice) return;
 
     completeEvent(currentEventId);
-    advanceDay();
+    advanceDay(); // Day by day
 
     if (selectedChoice.nextEventId) {
       setIsTransitioning(true);
@@ -44,6 +66,15 @@ const GoverningPhase: React.FC = () => {
       // End of story - show victory screen
       setPhase('gameOver');
     }
+  };
+
+  const handleSaveAndExit = async () => {
+    setIsSaving(true);
+    if (user) {
+      await saveGame(gameState, worldState);
+    }
+    goToTitle();
+    setIsSaving(false);
   };
 
   const getCategoryBadge = (category: string) => {
@@ -89,10 +120,25 @@ const GoverningPhase: React.FC = () => {
                   {approvalRating}%
                 </p>
               </div>
+              <button
+                onClick={handleSaveAndExit}
+                disabled={isSaving}
+                className="px-4 py-2 bg-muted/50 hover:bg-muted border border-border rounded-lg text-sm transition-colors"
+              >
+                {isSaving ? 'Saving...' : user ? '💾 Save & Exit' : '← Exit'}
+              </button>
             </div>
           </div>
         </div>
       </header>
+
+      {/* News ticker */}
+      <NewsTicker 
+        playerName={playerName} 
+        phase="governing" 
+        approvalRating={approvalRating} 
+        daysInOffice={daysInOffice} 
+      />
 
       {/* Approval warning */}
       {approvalRating < 30 && (
@@ -103,77 +149,84 @@ const GoverningPhase: React.FC = () => {
         </div>
       )}
 
-      <main className={`container mx-auto px-4 py-12 transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-        {/* Event card */}
-        <div className="max-w-3xl mx-auto">
-          <div className="card-glass rounded-xl p-8 mb-8 animate-slide-up">
-            {/* Category badge */}
-            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${badge.bg} mb-6`}>
-              <span>{badge.icon}</span>
-              <span className={`text-xs font-bold uppercase tracking-wider ${badge.text}`}>
-                {badge.label}
-              </span>
+      <main className={`container mx-auto px-4 py-8 transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Event card - takes 2 columns */}
+          <div className="lg:col-span-2">
+            <div className="card-glass rounded-xl p-8 mb-8 animate-slide-up">
+              {/* Category badge */}
+              <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${badge.bg} mb-6`}>
+                <span>{badge.icon}</span>
+                <span className={`text-xs font-bold uppercase tracking-wider ${badge.text}`}>
+                  {badge.label}
+                </span>
+              </div>
+
+              {/* Event title and description */}
+              <h2 className="headline-display text-3xl text-foreground mb-4">{currentEvent.title}</h2>
+              <p className="text-lg text-muted-foreground leading-relaxed">{currentEvent.description}</p>
             </div>
 
-            {/* Event title and description */}
-            <h2 className="headline-display text-3xl text-foreground mb-4">{currentEvent.title}</h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">{currentEvent.description}</p>
+            {/* Choices or consequence */}
+            {!showConsequence ? (
+              <div className="space-y-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                <p className="text-center text-muted-foreground mb-4">What is your decision, Mr. President?</p>
+                {currentEvent.choices.map((choice, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleChoice(choice)}
+                    className="w-full text-left p-6 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-card/80 transition-all group"
+                  >
+                    <div className="flex items-start gap-4">
+                      <span className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-lg font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
+                        {index + 1}
+                      </span>
+                      <p className="text-foreground text-lg">{choice.text}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-6 animate-slide-up">
+                {/* Your decision */}
+                <div className="p-6 rounded-lg bg-primary/10 border border-primary/30">
+                  <p className="text-sm text-primary mb-2 font-semibold">Your Decision:</p>
+                  <p className="text-foreground text-lg">{selectedChoice?.text}</p>
+                </div>
+
+                {/* Consequence */}
+                <div className="p-6 rounded-lg bg-card border border-border">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl">📰</span>
+                    <p className="text-sm text-muted-foreground font-semibold uppercase tracking-wider">
+                      The Aftermath
+                    </p>
+                  </div>
+                  <p className="text-foreground text-lg leading-relaxed">{selectedChoice?.consequence}</p>
+                  <div className="mt-4 flex items-center gap-2">
+                    <span className={`text-lg font-bold ${(selectedChoice?.approvalChange ?? 0) >= 0 ? 'text-victory' : 'text-destructive'}`}>
+                      {(selectedChoice?.approvalChange ?? 0) > 0 ? '+' : ''}{selectedChoice?.approvalChange}% Approval
+                    </span>
+                  </div>
+                </div>
+
+                {/* Continue button */}
+                <div className="flex justify-center pt-4">
+                  <button
+                    onClick={handleContinue}
+                    className="btn-presidential px-12 py-4 rounded-lg text-lg uppercase tracking-wider"
+                  >
+                    {selectedChoice?.nextEventId ? 'Continue to Next Day →' : 'See Your Legacy'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Choices or consequence */}
-          {!showConsequence ? (
-            <div className="space-y-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              <p className="text-center text-muted-foreground mb-4">What is your decision, Mr. President?</p>
-              {currentEvent.choices.map((choice, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleChoice(choice)}
-                  className="w-full text-left p-6 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-card/80 transition-all group"
-                >
-                  <div className="flex items-start gap-4">
-                    <span className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-lg font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
-                      {index + 1}
-                    </span>
-                    <p className="text-foreground text-lg">{choice.text}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-6 animate-slide-up">
-              {/* Your decision */}
-              <div className="p-6 rounded-lg bg-primary/10 border border-primary/30">
-                <p className="text-sm text-primary mb-2 font-semibold">Your Decision:</p>
-                <p className="text-foreground text-lg">{selectedChoice?.text}</p>
-              </div>
-
-              {/* Consequence */}
-              <div className="p-6 rounded-lg bg-card border border-border">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl">📰</span>
-                  <p className="text-sm text-muted-foreground font-semibold uppercase tracking-wider">
-                    The Aftermath
-                  </p>
-                </div>
-                <p className="text-foreground text-lg leading-relaxed">{selectedChoice?.consequence}</p>
-                <div className="mt-4 flex items-center gap-2">
-                  <span className={`text-lg font-bold ${(selectedChoice?.approvalChange ?? 0) >= 0 ? 'text-victory' : 'text-destructive'}`}>
-                    {(selectedChoice?.approvalChange ?? 0) > 0 ? '+' : ''}{selectedChoice?.approvalChange}% Approval
-                  </span>
-                </div>
-              </div>
-
-              {/* Continue button */}
-              <div className="flex justify-center pt-4">
-                <button
-                  onClick={handleContinue}
-                  className="btn-presidential px-12 py-4 rounded-lg text-lg uppercase tracking-wider"
-                >
-                  {selectedChoice?.nextEventId ? 'Continue →' : 'See Your Legacy'}
-                </button>
-              </div>
-            </div>
-          )}
+          {/* World Map sidebar */}
+          <div className="lg:col-span-1">
+            <WorldMap regions={worldState} />
+          </div>
         </div>
       </main>
     </div>
