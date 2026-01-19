@@ -1,15 +1,27 @@
 import React from 'react';
 import { useGame } from '@/context/GameContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useGameSave } from '@/hooks/useGameSave';
 import { policies, getCategoryColor, getCategoryIcon } from '@/data/policies';
 import { Policy } from '@/types/game';
+import NewsTicker from './NewsTicker';
 
 const CampaignPhase: React.FC = () => {
-  const { gameState, selectPolicy, removePolicy, startDebate } = useGame();
+  const { gameState, selectPolicy, removePolicy, startDebate, goToTitle } = useGame();
+  const { user } = useAuth();
+  const { saveGame } = useGameSave();
   const { playerName, approvalRating, selectedPolicies } = gameState;
 
   const categories = ['economy', 'healthcare', 'education', 'environment', 'security'] as const;
 
   const canProceed = selectedPolicies.length >= 3;
+
+  const handleSaveAndExit = async () => {
+    if (user) {
+      await saveGame(gameState, {});
+    }
+    goToTitle();
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,20 +44,24 @@ const CampaignPhase: React.FC = () => {
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Policies</p>
                 <p className="text-2xl font-bold text-primary">{selectedPolicies.length}/5</p>
               </div>
+              <button
+                onClick={handleSaveAndExit}
+                className="px-4 py-2 bg-muted/50 hover:bg-muted border border-border rounded-lg text-sm transition-colors"
+              >
+                {user ? '💾 Save & Exit' : '← Exit'}
+              </button>
             </div>
           </div>
         </div>
       </header>
 
       {/* News ticker */}
-      <div className="news-ticker py-2 overflow-hidden">
-        <div className="animate-marquee whitespace-nowrap">
-          <span className="mx-4">📰 BREAKING: Candidate {playerName} launches presidential campaign</span>
-          <span className="mx-4">📊 Polls show tight race ahead of primary season</span>
-          <span className="mx-4">🎤 First debate scheduled in coming weeks</span>
-          <span className="mx-4">💼 Economic concerns top voter priorities</span>
-        </div>
-      </div>
+      <NewsTicker 
+        playerName={playerName} 
+        phase="campaign" 
+        approvalRating={approvalRating} 
+        daysInOffice={0} 
+      />
 
       <main className="container mx-auto px-4 py-8">
         {/* Instructions */}

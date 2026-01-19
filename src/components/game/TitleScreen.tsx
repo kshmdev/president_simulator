@@ -1,10 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useGameSave } from '@/hooks/useGameSave';
+import { GamePhase, Policy } from '@/types/game';
 
 const TitleScreen: React.FC = () => {
-  const { setPlayerName, startCampaign } = useGame();
-  const [name, setName] = useState('');
+  const { gameState, setPlayerName, startCampaign, loadGameState } = useGame();
+  const { user, signOut, loading: authLoading } = useAuth();
+  const { loadGame, deleteGame } = useGameSave();
+  const navigate = useNavigate();
+  
+  const [name, setName] = useState(gameState.playerName || '');
   const [isStarting, setIsStarting] = useState(false);
+  const [hasSave, setHasSave] = useState(false);
+  const [loadingSave, setLoadingSave] = useState(false);
+
+  // Check for existing save when user is logged in
+  useEffect(() => {
+    const checkSave = async () => {
+      if (user) {
+        const save = await loadGame();
+        setHasSave(!!save);
+      } else {
+        setHasSave(false);
+      }
+    };
+    checkSave();
+  }, [user, loadGame]);
 
   const handleStart = () => {
     if (name.trim()) {
@@ -14,6 +37,47 @@ const TitleScreen: React.FC = () => {
         startCampaign();
       }, 1000);
     }
+  };
+
+  const handleContinue = async () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    setLoadingSave(true);
+    const save = await loadGame();
+    if (save) {
+      loadGameState(
+        {
+          phase: save.game_phase as GamePhase,
+          playerName: save.player_name,
+          approvalRating: save.approval_rating,
+          campaignFunds: save.campaign_funds,
+          selectedPolicies: save.selected_policies as Policy[],
+          debateScore: save.debate_score,
+          electionResult: save.election_result as 'win' | 'lose' | undefined,
+          daysInOffice: save.days_in_office,
+          eventsCompleted: save.events_completed,
+          currentEventId: save.current_event_id || undefined,
+        },
+        save.world_state as Record<string, { name: string; approval: number; sentiment: 'positive' | 'neutral' | 'negative'; description: string }>
+      );
+      setName(save.player_name);
+    }
+    setLoadingSave(false);
+  };
+
+  const handleNewGame = async () => {
+    if (hasSave) {
+      await deleteGame();
+      setHasSave(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    setHasSave(false);
   };
 
   return (
@@ -40,6 +104,30 @@ const TitleScreen: React.FC = () => {
         ))}
       </div>
 
+      {/* Auth status */}
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-4">
+        {authLoading ? (
+          <span className="text-muted-foreground text-sm">Loading...</span>
+        ) : user ? (
+          <>
+            <span className="text-muted-foreground text-sm">{user.email}</span>
+            <button
+              onClick={handleSignOut}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Sign Out
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => navigate('/auth')}
+            className="text-sm text-gold hover:text-gold/80 transition-colors"
+          >
+            Sign In to Save Progress
+          </button>
+        )}
+      </div>
+
       {/* Content */}
       <div className={`relative z-10 text-center px-4 transition-all duration-1000 ${isStarting ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}>
         {/* Eagle emblem */}
@@ -58,10 +146,21 @@ const TitleScreen: React.FC = () => {
           Campaign. Debate. Govern. Make History.
         </p>
 
+        {/* Continue game button */}
+        {hasSave && (
+          <button
+            onClick={handleContinue}
+            disabled={loadingSave}
+            className="btn-gold px-12 py-4 text-xl rounded-lg uppercase tracking-widest mb-6 block mx-auto"
+          >
+            {loadingSave ? 'Loading...' : 'Continue Campaign'}
+          </button>
+        )}
+
         {/* Name input */}
         <div className="max-w-md mx-auto mb-8">
           <label className="block text-sm text-muted-foreground mb-2 uppercase tracking-wider">
-            Enter Your Name, Candidate
+            {hasSave ? 'Or Start a New Game' : 'Enter Your Name, Candidate'}
           </label>
           <input
             type="text"
@@ -75,11 +174,17 @@ const TitleScreen: React.FC = () => {
 
         {/* Start button */}
         <button
-          onClick={handleStart}
+          onClick={() => {
+            if (hasSave) {
+              handleNewGame().then(() => handleStart());
+            } else {
+              handleStart();
+            }
+          }}
           disabled={!name.trim()}
           className="btn-presidential px-12 py-4 text-xl rounded-lg uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
-          Begin Campaign
+          {hasSave ? 'New Game' : 'Begin Campaign'}
         </button>
 
         {/* Footer */}

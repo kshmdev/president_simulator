@@ -14,7 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      game_saves: {
+        Row: {
+          approval_rating: number
+          campaign_funds: number
+          created_at: string
+          current_event_id: string | null
+          days_in_office: number
+          debate_score: number
+          election_result: string | null
+          events_completed: string[]
+          game_phase: string
+          id: string
+          player_name: string
+          selected_policies: Json
+          updated_at: string
+          user_id: string
+          world_state: Json
+        }
+        Insert: {
+          approval_rating?: number
+          campaign_funds?: number
+          created_at?: string
+          current_event_id?: string | null
+          days_in_office?: number
+          debate_score?: number
+          election_result?: string | null
+          events_completed?: string[]
+          game_phase?: string
+          id?: string
+          player_name: string
+          selected_policies?: Json
+          updated_at?: string
+          user_id: string
+          world_state?: Json
+        }
+        Update: {
+          approval_rating?: number
+          campaign_funds?: number
+          created_at?: string
+          current_event_id?: string | null
+          days_in_office?: number
+          debate_score?: number
+          election_result?: string | null
+          events_completed?: string[]
+          game_phase?: string
+          id?: string
+          player_name?: string
+          selected_policies?: Json
+          updated_at?: string
+          user_id?: string
+          world_state?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

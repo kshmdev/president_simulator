@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useGame } from '@/context/GameContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useGameSave } from '@/hooks/useGameSave';
 import { debateQuestions } from '@/data/debates';
-import { DebateQuestion, DebateAnswer } from '@/types/game';
+import { DebateAnswer } from '@/types/game';
 
 const DebateNight: React.FC = () => {
-  const { gameState, updateDebateScore, startElection } = useGame();
+  const { gameState, updateDebateScore, startElection, goToTitle } = useGame();
+  const { user } = useAuth();
+  const { saveGame } = useGameSave();
   const { playerName, approvalRating, debateScore } = gameState;
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -59,6 +63,15 @@ const DebateNight: React.FC = () => {
                   {debateScore > 0 ? '+' : ''}{debateScore}
                 </p>
               </div>
+              <button
+                onClick={async () => {
+                  if (user) await saveGame(gameState, {});
+                  goToTitle();
+                }}
+                className="px-4 py-2 bg-muted/50 hover:bg-muted border border-border rounded-lg text-sm transition-colors"
+              >
+                {user ? '💾 Save & Exit' : '← Exit'}
+              </button>
             </div>
           </div>
         </div>
