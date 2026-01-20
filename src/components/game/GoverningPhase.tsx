@@ -3,9 +3,10 @@ import { useGame } from '@/context/GameContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useGameSave } from '@/hooks/useGameSave';
 import { getEventById } from '@/data/events';
-import { EventChoice } from '@/types/game';
+import { EventChoice, CabinetMember, CabinetPosition } from '@/types/game';
 import WorldMap from './WorldMap';
 import NewsTicker from './NewsTicker';
+import CabinetHiring from './CabinetHiring';
 
 const GoverningPhase: React.FC = () => {
   const { 
@@ -17,16 +18,21 @@ const GoverningPhase: React.FC = () => {
     advanceDay, 
     setPhase, 
     goToTitle,
-    updateWorldState 
+    updateWorldState,
+    hireCabinetMember,
+    fireCabinetMember,
+    setPendingCabinetPosition,
   } = useGame();
   const { user } = useAuth();
   const { saveGame } = useGameSave();
-  const { playerName, approvalRating, daysInOffice, currentEventId } = gameState;
+  const { playerName, approvalRating, daysInOffice, currentEventId, cabinet, pendingCabinetPosition } = gameState;
 
   const [selectedChoice, setSelectedChoice] = useState<EventChoice | null>(null);
   const [showConsequence, setShowConsequence] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showCabinetHiring, setShowCabinetHiring] = useState(false);
+  const [hiringPosition, setHiringPosition] = useState<CabinetPosition | null>(null);
 
   const currentEvent = currentEventId ? getEventById(currentEventId) : null;
 
@@ -37,7 +43,29 @@ const GoverningPhase: React.FC = () => {
     }
   }, [approvalRating, setPhase]);
 
+  // Check if current event triggers cabinet hiring
+  useEffect(() => {
+    if (currentEvent?.triggerCabinetHiring && !showCabinetHiring) {
+      setHiringPosition(currentEvent.triggerCabinetHiring);
+      setShowCabinetHiring(true);
+    }
+  }, [currentEvent, showCabinetHiring]);
+
   const handleChoice = (choice: EventChoice) => {
+    // Fire cabinet member if the choice requires it
+    if (choice.fireCabinetMember) {
+      fireCabinetMember(choice.fireCabinetMember);
+    }
+
+    // Check if choice requires cabinet hiring
+    if (choice.requiresCabinetHiring) {
+      setPendingCabinetPosition(choice.requiresCabinetHiring);
+      setHiringPosition(choice.requiresCabinetHiring);
+      setShowCabinetHiring(true);
+      setSelectedChoice(choice);
+      return;
+    }
+
     setSelectedChoice(choice);
     setShowConsequence(true);
     updateApproval(choice.approvalChange);
@@ -45,6 +73,22 @@ const GoverningPhase: React.FC = () => {
     // Update world state based on event category
     if (currentEvent) {
       updateWorldState(currentEvent.category, choice.approvalChange);
+    }
+  };
+
+  const handleCabinetHire = (member: CabinetMember) => {
+    hireCabinetMember(member);
+    setShowCabinetHiring(false);
+    setHiringPosition(null);
+    setPendingCabinetPosition(undefined);
+
+    // Now show the consequence if we had a pending choice
+    if (selectedChoice) {
+      setShowConsequence(true);
+      updateApproval(selectedChoice.approvalChange);
+      if (currentEvent) {
+        updateWorldState(currentEvent.category, selectedChoice.approvalChange);
+      }
     }
   };
 
@@ -78,13 +122,14 @@ const GoverningPhase: React.FC = () => {
   };
 
   const getCategoryBadge = (category: string) => {
-    const badges = {
+    const badges: Record<string, { bg: string; text: string; icon: string; label: string }> = {
       crisis: { bg: 'bg-destructive/20', text: 'text-destructive', icon: '⚠️', label: 'CRISIS' },
       opportunity: { bg: 'bg-victory/20', text: 'text-victory', icon: '✨', label: 'OPPORTUNITY' },
       diplomacy: { bg: 'bg-secondary/20', text: 'text-secondary', icon: '🌍', label: 'DIPLOMACY' },
       domestic: { bg: 'bg-gold/20', text: 'text-gold', icon: '🏛️', label: 'DOMESTIC' },
+      cabinet: { bg: 'bg-primary/20', text: 'text-primary', icon: '👔', label: 'CABINET' },
     };
-    return badges[category as keyof typeof badges] || badges.domestic;
+    return badges[category] || badges.domestic;
   };
 
   if (!currentEvent) {
@@ -113,6 +158,10 @@ const GoverningPhase: React.FC = () => {
               <div className="stat-card">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Day in Office</p>
                 <p className="text-2xl font-bold text-foreground">{daysInOffice}</p>
+              </div>
+              <div className="stat-card">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">Cabinet</p>
+                <p className="text-2xl font-bold text-primary">{cabinet.length}</p>
               </div>
               <div className="stat-card">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Approval</p>
@@ -153,79 +202,129 @@ const GoverningPhase: React.FC = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Event card - takes 2 columns */}
           <div className="lg:col-span-2">
-            <div className="card-glass rounded-xl p-8 mb-8 animate-slide-up">
-              {/* Category badge */}
-              <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${badge.bg} mb-6`}>
-                <span>{badge.icon}</span>
-                <span className={`text-xs font-bold uppercase tracking-wider ${badge.text}`}>
-                  {badge.label}
-                </span>
-              </div>
-
-              {/* Event title and description */}
-              <h2 className="headline-display text-3xl text-foreground mb-4">{currentEvent.title}</h2>
-              <p className="text-lg text-muted-foreground leading-relaxed">{currentEvent.description}</p>
-            </div>
-
-            {/* Choices or consequence */}
-            {!showConsequence ? (
-              <div className="space-y-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                <p className="text-center text-muted-foreground mb-4">What is your decision, Mr. President?</p>
-                {currentEvent.choices.map((choice, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleChoice(choice)}
-                    className="w-full text-left p-6 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-card/80 transition-all group"
-                  >
-                    <div className="flex items-start gap-4">
-                      <span className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-lg font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
-                        {index + 1}
-                      </span>
-                      <p className="text-foreground text-lg">{choice.text}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
+            {/* Show Cabinet Hiring UI when triggered */}
+            {showCabinetHiring && hiringPosition ? (
+              <CabinetHiring 
+                position={hiringPosition} 
+                onHire={handleCabinetHire}
+              />
             ) : (
-              <div className="space-y-6 animate-slide-up">
-                {/* Your decision */}
-                <div className="p-6 rounded-lg bg-primary/10 border border-primary/30">
-                  <p className="text-sm text-primary mb-2 font-semibold">Your Decision:</p>
-                  <p className="text-foreground text-lg">{selectedChoice?.text}</p>
-                </div>
-
-                {/* Consequence */}
-                <div className="p-6 rounded-lg bg-card border border-border">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-2xl">📰</span>
-                    <p className="text-sm text-muted-foreground font-semibold uppercase tracking-wider">
-                      The Aftermath
-                    </p>
-                  </div>
-                  <p className="text-foreground text-lg leading-relaxed">{selectedChoice?.consequence}</p>
-                  <div className="mt-4 flex items-center gap-2">
-                    <span className={`text-lg font-bold ${(selectedChoice?.approvalChange ?? 0) >= 0 ? 'text-victory' : 'text-destructive'}`}>
-                      {(selectedChoice?.approvalChange ?? 0) > 0 ? '+' : ''}{selectedChoice?.approvalChange}% Approval
+              <>
+                <div className="card-glass rounded-xl p-8 mb-8 animate-slide-up">
+                  {/* Category badge */}
+                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${badge.bg} mb-6`}>
+                    <span>{badge.icon}</span>
+                    <span className={`text-xs font-bold uppercase tracking-wider ${badge.text}`}>
+                      {badge.label}
                     </span>
                   </div>
+
+                  {/* Event title and description */}
+                  <h2 className="headline-display text-3xl text-foreground mb-4">{currentEvent.title}</h2>
+                  <p className="text-lg text-muted-foreground leading-relaxed">{currentEvent.description}</p>
                 </div>
 
-                {/* Continue button */}
-                <div className="flex justify-center pt-4">
-                  <button
-                    onClick={handleContinue}
-                    className="btn-presidential px-12 py-4 rounded-lg text-lg uppercase tracking-wider"
-                  >
-                    {selectedChoice?.nextEventId ? 'Continue to Next Day →' : 'See Your Legacy'}
-                  </button>
-                </div>
-              </div>
+                {/* Choices or consequence */}
+                {!showConsequence ? (
+                  <div className="space-y-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                    <p className="text-center text-muted-foreground mb-4">What is your decision, Mr. President?</p>
+                    {currentEvent.choices.map((choice, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleChoice(choice)}
+                        className="w-full text-left p-6 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-card/80 transition-all group"
+                      >
+                        <div className="flex items-start gap-4">
+                          <span className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-lg font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
+                            {index + 1}
+                          </span>
+                          <div>
+                            <p className="text-foreground text-lg">{choice.text}</p>
+                            {choice.fireCabinetMember && (
+                              <p className="text-destructive text-sm mt-1">⚠️ This will require dismissing a cabinet member</p>
+                            )}
+                            {choice.requiresCabinetHiring && (
+                              <p className="text-primary text-sm mt-1">👔 You will need to appoint a new cabinet member</p>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-6 animate-slide-up">
+                    {/* Your decision */}
+                    <div className="p-6 rounded-lg bg-primary/10 border border-primary/30">
+                      <p className="text-sm text-primary mb-2 font-semibold">Your Decision:</p>
+                      <p className="text-foreground text-lg">{selectedChoice?.text}</p>
+                    </div>
+
+                    {/* Consequence */}
+                    <div className="p-6 rounded-lg bg-card border border-border">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl">📰</span>
+                        <p className="text-sm text-muted-foreground font-semibold uppercase tracking-wider">
+                          The Aftermath
+                        </p>
+                      </div>
+                      <p className="text-foreground text-lg leading-relaxed">{selectedChoice?.consequence}</p>
+                      <div className="mt-4 flex items-center gap-2">
+                        <span className={`text-lg font-bold ${(selectedChoice?.approvalChange ?? 0) >= 0 ? 'text-victory' : 'text-destructive'}`}>
+                          {(selectedChoice?.approvalChange ?? 0) > 0 ? '+' : ''}{selectedChoice?.approvalChange}% Approval
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Continue button */}
+                    <div className="flex justify-center pt-4">
+                      <button
+                        onClick={handleContinue}
+                        className="btn-presidential px-12 py-4 rounded-lg text-lg uppercase tracking-wider"
+                      >
+                        {selectedChoice?.nextEventId ? 'Continue to Next Day →' : 'See Your Legacy'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
           {/* World Map sidebar */}
           <div className="lg:col-span-1">
             <WorldMap regions={worldState} />
+            
+            {/* Cabinet Summary */}
+            <div className="mt-6 card-glass rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <span>👔</span> Your Cabinet
+              </h3>
+              <div className="space-y-3">
+                {cabinet.slice(0, 4).map((member) => (
+                  <div key={member.id} className="flex items-center justify-between p-2 rounded-lg bg-card/50">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{member.name}</p>
+                      <p className="text-xs text-muted-foreground capitalize">{member.position.replace(/_/g, ' ')}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`text-xs font-bold ${member.loyalty >= 70 ? 'text-victory' : member.loyalty >= 50 ? 'text-gold' : 'text-destructive'}`}>
+                        {member.loyalty}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {cabinet.length > 4 && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    +{cabinet.length - 4} more members
+                  </p>
+                )}
+                {cabinet.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-2">
+                    No cabinet members appointed
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </main>
