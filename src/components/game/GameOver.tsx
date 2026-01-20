@@ -124,7 +124,7 @@ const GameOver: React.FC = () => {
         </button>
 
         <p className="mt-8 text-muted-foreground/50 text-sm">
-          © 2024 Presidential Simulator
+          © 2026 Presidential Simulator
         </p>
       </div>
     </div>

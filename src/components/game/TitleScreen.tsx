@@ -190,7 +190,7 @@ const TitleScreen: React.FC = () => {
 
         {/* Footer */}
         <p className="mt-16 text-muted-foreground/50 text-sm">
-          © 2024 Presidential Simulator • All decisions are fictional
+          © 2026 Presidential Simulator • All decisions are fictional
         </p>
       </div>
     </div>
