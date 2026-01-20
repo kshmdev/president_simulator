@@ -63,25 +63,26 @@ const CampaignPhase: React.FC = () => {
         daysInOffice={0} 
       />
 
-      <main className="container mx-auto px-4 py-4 pb-28">
+      <main className="container mx-auto px-4 py-8">
         {/* Instructions */}
-        <div className="card-glass rounded-lg p-3 mb-4 animate-slide-up">
-          <h2 className="text-base font-bold mb-1 text-foreground">Build Your Platform</h2>
-          <p className="text-xs text-muted-foreground">
-            Select 3-5 policies to run on.
+        <div className="card-glass rounded-xl p-6 mb-8 animate-slide-up">
+          <h2 className="headline-display text-xl mb-2 text-foreground">Build Your Platform</h2>
+          <p className="text-muted-foreground">
+            Select 3-5 policies to run on. Each policy affects your approval rating based on voter support and opposition.
+            Choose wisely – your platform will define your campaign.
           </p>
         </div>
 
         {/* Selected policies */}
         {selectedPolicies.length > 0 && (
-          <div className="mb-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            <h3 className="text-xs font-semibold mb-2 text-foreground">Your Platform</h3>
-            <div className="flex flex-wrap gap-2">
+          <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+            <h3 className="text-lg font-semibold mb-4 text-foreground">Your Platform</h3>
+            <div className="flex flex-wrap gap-3">
               {selectedPolicies.map((policy) => (
                 <button
                   key={policy.id}
                   onClick={() => removePolicy(policy.id)}
-                  className="group flex items-center gap-1 px-2 py-1 bg-primary/20 border border-primary/50 rounded-full text-xs hover:bg-primary/30 transition-all"
+                  className="group flex items-center gap-2 px-4 py-2 bg-primary/20 border border-primary/50 rounded-full text-sm hover:bg-primary/30 transition-all"
                 >
                   <span>{getCategoryIcon(policy.category)}</span>
                   <span className="text-foreground">{policy.name}</span>
@@ -93,14 +94,14 @@ const CampaignPhase: React.FC = () => {
         )}
 
         {/* Policy categories */}
-        <div className="space-y-4">
+        <div className="space-y-8">
           {categories.map((category, catIndex) => (
             <div key={category} className="animate-slide-up" style={{ animationDelay: `${0.1 + catIndex * 0.05}s` }}>
-              <h3 className="text-xs font-semibold mb-2 capitalize flex items-center gap-2">
-                <span className="text-base">{getCategoryIcon(category)}</span>
+              <h3 className="text-lg font-semibold mb-4 capitalize flex items-center gap-2">
+                <span className="text-2xl">{getCategoryIcon(category)}</span>
                 <span className={getCategoryColor(category)}>{category}</span>
               </h3>
-              <div className="grid md:grid-cols-5 lg:grid-cols-6 gap-2">
+              <div className="grid md:grid-cols-3 gap-4">
                 {policies
                   .filter((p) => p.category === category)
                   .map((policy) => (
@@ -146,7 +147,7 @@ const PolicyCard: React.FC<PolicyCardProps> = ({ policy, isSelected, onSelect, d
     <button
       onClick={onSelect}
       disabled={disabled || isSelected}
-      className={`text-left p-2 rounded-md border transition-all ${
+      className={`text-left p-4 rounded-lg border transition-all ${
         isSelected
           ? 'bg-primary/20 border-primary shadow-lg shadow-primary/20'
           : disabled
@@ -154,14 +155,14 @@ const PolicyCard: React.FC<PolicyCardProps> = ({ policy, isSelected, onSelect, d
           : 'bg-card border-border hover:border-primary/50 hover:bg-card/80'
       }`}
     >
-      <h4 className="font-semibold text-foreground mb-0.5 text-xs">{policy.name}</h4>
-      <p className="text-xs text-muted-foreground mb-1 line-clamp-2">{policy.description}</p>
-      <div className="flex items-center gap-1 text-xs">
-        <span className="text-victory">+{policy.support}</span>
-        <span className="text-destructive">-{policy.opposition}</span>
+      <h4 className="font-semibold text-foreground mb-1">{policy.name}</h4>
+      <p className="text-sm text-muted-foreground mb-3">{policy.description}</p>
+      <div className="flex items-center gap-4 text-xs">
+        <span className="text-victory">+{policy.support} support</span>
+        <span className="text-destructive">-{policy.opposition} opposition</span>
       </div>
       {isSelected && (
-        <div className="mt-0.5 text-xs text-primary font-medium">✓</div>
+        <div className="mt-2 text-xs text-primary font-medium">✓ In your platform</div>
       )}
     </button>
   );
