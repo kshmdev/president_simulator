@@ -138,7 +138,7 @@ const TitleScreen: React.FC = () => {
 
         {/* Title */}
         <h1 className="headline-display text-3xl sm:text-5xl md:text-7xl lg:text-8xl mb-2 sm:mb-4 text-gradient-gold leading-tight">
-          PRESIDENTIAL
+          PRESIDENT
         </h1>
         <h2 className="headline-display text-xl sm:text-3xl md:text-5xl lg:text-6xl mb-2 text-foreground leading-tight">
           SIMULATOR
