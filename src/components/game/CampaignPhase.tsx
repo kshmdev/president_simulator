@@ -63,7 +63,7 @@ const CampaignPhase: React.FC = () => {
         daysInOffice={0} 
       />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pb-32">
         {/* Instructions */}
         <div className="card-glass rounded-xl p-6 mb-8 animate-slide-up">
           <h2 className="headline-display text-xl mb-2 text-foreground">Build Your Platform</h2>
