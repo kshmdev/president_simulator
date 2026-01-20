@@ -7,6 +7,8 @@ import { EventChoice, CabinetMember, CabinetPosition } from '@/types/game';
 import WorldMap from './WorldMap';
 import NewsTicker from './NewsTicker';
 import CabinetHiring from './CabinetHiring';
+import CabinetView from './CabinetView';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
 const GoverningPhase: React.FC = () => {
   const { 
@@ -33,6 +35,7 @@ const GoverningPhase: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showCabinetHiring, setShowCabinetHiring] = useState(false);
   const [hiringPosition, setHiringPosition] = useState<CabinetPosition | null>(null);
+  const [showCabinetView, setShowCabinetView] = useState(false);
 
   const currentEvent = currentEventId ? getEventById(currentEventId) : null;
 
@@ -159,10 +162,17 @@ const GoverningPhase: React.FC = () => {
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Day in Office</p>
                 <p className="text-2xl font-bold text-foreground">{daysInOffice}</p>
               </div>
-              <div className="stat-card">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Cabinet</p>
-                <p className="text-2xl font-bold text-primary">{cabinet.length}</p>
-              </div>
+              <Dialog open={showCabinetView} onOpenChange={setShowCabinetView}>
+                <DialogTrigger asChild>
+                  <button className="stat-card cursor-pointer hover:border-primary/50 transition-all">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Cabinet</p>
+                    <p className="text-2xl font-bold text-primary">{cabinet.length}</p>
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:hidden">
+                  <CabinetView cabinet={cabinet} onClose={() => setShowCabinetView(false)} />
+                </DialogContent>
+              </Dialog>
               <div className="stat-card">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Approval</p>
                 <p className={`text-2xl font-bold ${approvalRating >= 50 ? 'text-victory' : approvalRating >= 30 ? 'text-gold' : 'text-destructive'}`}>
@@ -295,7 +305,10 @@ const GoverningPhase: React.FC = () => {
             <WorldMap regions={worldState} />
             
             {/* Cabinet Summary */}
-            <div className="mt-6 card-glass rounded-xl p-6">
+            <div 
+              className="mt-6 card-glass rounded-xl p-6 cursor-pointer hover:border-primary/50 transition-all"
+              onClick={() => setShowCabinetView(true)}
+            >
               <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                 <span>👔</span> Your Cabinet
               </h3>
