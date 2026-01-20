@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { GameState, initialGameState, Policy, GamePhase } from '@/types/game';
+import { GameState, initialGameState, Policy, GamePhase, CabinetMember, CabinetPosition, initialCabinet } from '@/types/game';
 
 interface RegionState {
   name: string;
@@ -29,6 +29,9 @@ interface GameContextType {
   loadGameState: (state: GameState, world: Record<string, RegionState>) => void;
   updateWorldState: (eventCategory: string, approvalChange: number) => void;
   goToTitle: () => void;
+  hireCabinetMember: (member: CabinetMember) => void;
+  fireCabinetMember: (position: CabinetPosition) => void;
+  setPendingCabinetPosition: (position: CabinetPosition | undefined) => void;
 }
 
 const initialWorldState: Record<string, RegionState> = {
@@ -138,8 +141,28 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const resetGame = useCallback(() => {
-    setGameState(initialGameState);
+    setGameState({ ...initialGameState, cabinet: initialCabinet });
     setWorldState(initialWorldState);
+  }, []);
+
+  const hireCabinetMember = useCallback((member: CabinetMember) => {
+    setGameState(prev => ({
+      ...prev,
+      cabinet: [...prev.cabinet.filter(m => m.position !== member.position), member],
+      approvalRating: Math.min(100, prev.approvalRating + member.approvalBonus),
+      pendingCabinetPosition: undefined,
+    }));
+  }, []);
+
+  const fireCabinetMember = useCallback((position: CabinetPosition) => {
+    setGameState(prev => ({
+      ...prev,
+      cabinet: prev.cabinet.filter(m => m.position !== position),
+    }));
+  }, []);
+
+  const setPendingCabinetPosition = useCallback((position: CabinetPosition | undefined) => {
+    setGameState(prev => ({ ...prev, pendingCabinetPosition: position }));
   }, []);
 
   const loadGameState = useCallback((state: GameState, world: Record<string, RegionState>) => {
@@ -204,6 +227,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loadGameState,
         updateWorldState,
         goToTitle,
+        hireCabinetMember,
+        fireCabinetMember,
+        setPendingCabinetPosition,
       }}
     >
       {children}
