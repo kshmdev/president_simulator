@@ -60,6 +60,7 @@ const TitleScreen: React.FC = () => {
           daysInOffice: save.days_in_office,
           eventsCompleted: save.events_completed,
           currentEventId: save.current_event_id || undefined,
+          cabinet: [],
         },
         save.world_state as Record<string, { name: string; approval: number; sentiment: 'positive' | 'neutral' | 'negative'; description: string }>
       );
