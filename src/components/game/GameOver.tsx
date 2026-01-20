@@ -58,55 +58,55 @@ const GameOver: React.FC = () => {
   const grade = getGrade();
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--gradient-hero)' }}>
-      <div className="max-w-2xl mx-auto text-center animate-fade-in">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 sm:py-0" style={{ background: 'var(--gradient-hero)' }}>
+      <div className="w-full max-w-2xl mx-auto text-center animate-fade-in">
         {/* Emoji */}
-        <div className="text-8xl mb-6">{getEmoji()}</div>
+        <div className="text-6xl sm:text-8xl mb-4 sm:mb-6">{getEmoji()}</div>
 
         {/* Title */}
-        <h1 className="headline-display text-4xl md:text-5xl text-gradient-gold mb-4">
+        <h1 className="headline-display text-2xl sm:text-4xl md:text-5xl text-gradient-gold mb-3 sm:mb-4 break-words">
           {getTitle()}
         </h1>
 
         {/* Player name */}
-        <p className="text-xl text-foreground mb-6">
+        <p className="text-base sm:text-xl text-foreground mb-4 sm:mb-6 break-words">
           {didWinElection ? `President ${playerName}` : `Candidate ${playerName}`}
         </p>
 
         {/* Message */}
-        <p className="text-lg text-muted-foreground leading-relaxed mb-12 max-w-lg mx-auto">
+        <p className="text-sm sm:text-base lg:text-lg text-muted-foreground leading-relaxed mb-8 sm:mb-12 max-w-lg mx-auto px-2 break-words">
           {getMessage()}
         </p>
 
         {/* Stats */}
         {didWinElection && (
-          <div className="grid grid-cols-3 gap-6 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-8 sm:mb-12">
             <div className="stat-card text-center">
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Final Approval</p>
-              <p className={`text-3xl font-bold ${approvalRating >= 50 ? 'text-victory' : 'text-destructive'}`}>
+              <p className={`text-2xl sm:text-3xl font-bold ${approvalRating >= 50 ? 'text-victory' : 'text-destructive'}`}>
                 {approvalRating}%
               </p>
             </div>
             <div className="stat-card text-center">
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Days in Office</p>
-              <p className="text-3xl font-bold text-foreground">{daysInOffice}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-foreground">{daysInOffice}</p>
             </div>
             <div className="stat-card text-center">
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Legacy Grade</p>
-              <p className={`text-3xl font-bold ${grade.color}`}>{grade.grade}</p>
+              <p className={`text-2xl sm:text-3xl font-bold ${grade.color}`}>{grade.grade}</p>
             </div>
           </div>
         )}
 
         {/* Decisions summary */}
         {didWinElection && eventsCompleted.length > 0 && (
-          <div className="card-glass rounded-xl p-6 mb-12 text-left">
-            <h3 className="font-semibold text-foreground mb-3">Key Decisions Made: {eventsCompleted.length}</h3>
+          <div className="card-glass rounded-xl p-4 sm:p-6 mb-8 sm:mb-12 text-left">
+            <h3 className="font-semibold text-foreground mb-2 sm:mb-3 text-sm sm:text-base">Key Decisions Made: {eventsCompleted.length}</h3>
             <div className="flex flex-wrap gap-2">
               {eventsCompleted.map((eventId) => (
                 <span
                   key={eventId}
-                  className="px-3 py-1 bg-muted rounded-full text-sm text-muted-foreground capitalize"
+                  className="px-3 py-1 bg-muted rounded-full text-xs sm:text-sm text-muted-foreground capitalize"
                 >
                   {eventId.replace(/-/g, ' ')}
                 </span>
@@ -118,12 +118,12 @@ const GameOver: React.FC = () => {
         {/* Play again button */}
         <button
           onClick={resetGame}
-          className="btn-presidential px-12 py-4 rounded-lg text-lg uppercase tracking-wider"
+          className="btn-presidential px-6 sm:px-12 py-2 sm:py-4 rounded-lg text-sm sm:text-lg uppercase tracking-wider w-full sm:w-auto"
         >
           Run Again
         </button>
 
-        <p className="mt-8 text-muted-foreground/50 text-sm">
+        <p className="mt-6 sm:mt-8 text-muted-foreground/50 text-xs sm:text-sm">
           © 2026 Presidential Simulator
         </p>
       </div>

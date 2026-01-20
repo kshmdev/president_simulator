@@ -99,44 +99,44 @@ const ElectionDay: React.FC = () => {
     <div className="min-h-screen bg-background">
       {/* Election night header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-primary text-sm uppercase tracking-wider font-semibold">🔴 LIVE COVERAGE</p>
-              <h1 className="headline-display text-2xl text-foreground">Election Night</h1>
+        <div className="container mx-auto px-4 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6">
+            <div className="min-w-0">
+              <p className="text-primary text-xs sm:text-sm uppercase tracking-wider font-semibold">🔴 LIVE COVERAGE</p>
+              <h1 className="headline-display text-lg sm:text-2xl text-foreground truncate">Election Night</h1>
             </div>
-            <div className="text-right">
-              <p className="text-muted-foreground text-sm">Votes needed to win</p>
-              <p className="text-2xl font-bold text-gold">{votesToWin}</p>
+            <div className="text-left sm:text-right">
+              <p className="text-muted-foreground text-xs sm:text-sm">Votes needed to win</p>
+              <p className="text-2xl sm:text-2xl font-bold text-gold">{votesToWin}</p>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6 sm:py-8">
         {/* Vote counters */}
-        <div className="grid grid-cols-2 gap-8 mb-8">
-          <div className={`p-6 rounded-xl border-2 transition-all ${playerVotes >= votesToWin ? 'border-victory bg-victory/10' : 'border-secondary bg-secondary/10'}`}>
-            <p className="text-sm text-muted-foreground uppercase tracking-wider mb-1">Candidate</p>
-            <p className="headline-display text-2xl text-foreground mb-2">{playerName}</p>
-            <p className={`text-5xl font-bold transition-all animate-vote-count ${playerVotes >= votesToWin ? 'text-victory' : 'text-secondary'}`}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-6 sm:mb-8">
+          <div className={`p-4 sm:p-6 rounded-xl border-2 transition-all ${playerVotes >= votesToWin ? 'border-victory bg-victory/10' : 'border-secondary bg-secondary/10'}`}>
+            <p className="text-xs sm:text-sm text-muted-foreground uppercase tracking-wider mb-1">Candidate</p>
+            <p className="headline-display text-lg sm:text-2xl text-foreground mb-2 truncate">{playerName}</p>
+            <p className={`text-3xl sm:text-5xl font-bold transition-all animate-vote-count ${playerVotes >= votesToWin ? 'text-victory' : 'text-secondary'}`}>
               {playerVotes}
             </p>
-            <p className="text-muted-foreground mt-1">Electoral Votes</p>
+            <p className="text-xs sm:text-base text-muted-foreground mt-1">Electoral Votes</p>
           </div>
-          <div className={`p-6 rounded-xl border-2 transition-all ${opponentVotes >= votesToWin ? 'border-destructive bg-destructive/10' : 'border-primary bg-primary/10'}`}>
-            <p className="text-sm text-muted-foreground uppercase tracking-wider mb-1">Opponent</p>
-            <p className="headline-display text-2xl text-foreground mb-2">Senator Richards</p>
-            <p className={`text-5xl font-bold transition-all animate-vote-count ${opponentVotes >= votesToWin ? 'text-destructive' : 'text-primary'}`}>
+          <div className={`p-4 sm:p-6 rounded-xl border-2 transition-all ${opponentVotes >= votesToWin ? 'border-destructive bg-destructive/10' : 'border-primary bg-primary/10'}`}>
+            <p className="text-xs sm:text-sm text-muted-foreground uppercase tracking-wider mb-1">Opponent</p>
+            <p className="headline-display text-lg sm:text-2xl text-foreground mb-2 truncate">Senator Richards</p>
+            <p className={`text-3xl sm:text-5xl font-bold transition-all animate-vote-count ${opponentVotes >= votesToWin ? 'text-destructive' : 'text-primary'}`}>
               {opponentVotes}
             </p>
-            <p className="text-muted-foreground mt-1">Electoral Votes</p>
+            <p className="text-xs sm:text-base text-muted-foreground mt-1">Electoral Votes</p>
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="mb-8">
-          <div className="flex justify-between text-sm text-muted-foreground mb-2">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex justify-between text-xs sm:text-sm text-muted-foreground mb-2">
             <span>States Reporting: {stateResults.filter((s) => s.called).length}/{states.length}</span>
             <span>{Math.round((stateResults.filter((s) => s.called).length / states.length) * 100)}% Complete</span>
           </div>
@@ -155,11 +155,11 @@ const ElectionDay: React.FC = () => {
         </div>
 
         {/* State results grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 mb-8">
           {stateResults.map((state, index) => (
             <div
               key={state.name}
-              className={`p-3 rounded-lg border transition-all duration-300 ${
+              className={`p-2 sm:p-3 rounded-lg border transition-all duration-300 ${
                 state.called
                   ? state.winner === 'player'
                     ? 'bg-secondary/20 border-secondary'
@@ -167,8 +167,8 @@ const ElectionDay: React.FC = () => {
                   : 'bg-card border-border opacity-50'
               } ${index === currentStateIndex ? 'ring-2 ring-gold animate-pulse' : ''}`}
             >
-              <p className="font-medium text-sm text-foreground truncate">{state.name}</p>
-              <p className="text-lg font-bold text-muted-foreground">{state.votes}</p>
+              <p className="font-medium text-xs sm:text-sm text-foreground truncate">{state.name}</p>
+              <p className="text-sm sm:text-lg font-bold text-muted-foreground">{state.votes}</p>
               {state.called && (
                 <p className={`text-xs font-semibold ${state.winner === 'player' ? 'text-secondary' : 'text-primary'}`}>
                   {state.winner === 'player' ? playerName.split(' ')[0] : 'Richards'}
@@ -180,38 +180,38 @@ const ElectionDay: React.FC = () => {
 
         {/* Final result overlay */}
         {showFinalResult && (
-          <div className="fixed inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-            <div className="text-center p-12">
+          <div className="fixed inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in px-4">
+            <div className="text-center p-6 sm:p-12">
               {playerVotes >= votesToWin ? (
                 <>
-                  <div className="text-8xl mb-6">🎉</div>
-                  <h2 className="headline-display text-4xl md:text-6xl text-gradient-gold mb-4">
+                  <div className="text-6xl sm:text-8xl mb-4 sm:mb-6">🎉</div>
+                  <h2 className="headline-display text-2xl sm:text-4xl md:text-6xl text-gradient-gold mb-3 sm:mb-4 break-words">
                     VICTORY!
                   </h2>
-                  <p className="text-xl text-foreground mb-2">
+                  <p className="text-base sm:text-xl text-foreground mb-1 sm:mb-2 break-words">
                     Congratulations, President-Elect {playerName}!
                   </p>
-                  <p className="text-muted-foreground mb-8">
+                  <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8">
                     You won with {playerVotes} electoral votes.
                   </p>
                 </>
               ) : (
                 <>
-                  <div className="text-8xl mb-6">😔</div>
-                  <h2 className="headline-display text-4xl md:text-6xl text-destructive mb-4">
+                  <div className="text-6xl sm:text-8xl mb-4 sm:mb-6">😔</div>
+                  <h2 className="headline-display text-2xl sm:text-4xl md:text-6xl text-destructive mb-3 sm:mb-4 break-words">
                     DEFEAT
                   </h2>
-                  <p className="text-xl text-foreground mb-2">
+                  <p className="text-base sm:text-xl text-foreground mb-1 sm:mb-2 break-words">
                     Senator Richards wins the presidency.
                   </p>
-                  <p className="text-muted-foreground mb-8">
+                  <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8">
                     You received {playerVotes} electoral votes. You needed {votesToWin}.
                   </p>
                 </>
               )}
               <button
                 onClick={handleContinue}
-                className="btn-presidential px-12 py-4 rounded-lg text-lg uppercase tracking-wider"
+                className="btn-presidential px-6 sm:px-12 py-2 sm:py-4 rounded-lg text-sm sm:text-lg uppercase tracking-wider w-full sm:w-auto"
               >
                 {playerVotes >= votesToWin ? 'Begin Your Presidency →' : 'Try Again'}
               </button>

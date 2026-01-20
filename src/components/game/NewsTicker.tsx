@@ -61,7 +61,7 @@ const NewsTicker: React.FC<NewsTickerProps> = ({ playerName, phase, approvalRati
   }, []);
 
   return (
-    <div className="news-ticker py-2 overflow-hidden relative">
+    <div className="news-ticker py-1 sm:py-2 overflow-hidden relative">
       <div 
         key={animationKey}
         className="whitespace-nowrap"
@@ -70,13 +70,13 @@ const NewsTicker: React.FC<NewsTickerProps> = ({ playerName, phase, approvalRati
         }}
       >
         {currentNews.map((news, index) => (
-          <span key={index} className="mx-8 inline-block">
+          <span key={index} className="mx-4 sm:mx-8 inline-block text-xs sm:text-sm">
             {news}
           </span>
         ))}
         {/* Duplicate for seamless loop */}
         {currentNews.map((news, index) => (
-          <span key={`dup-${index}`} className="mx-8 inline-block">
+          <span key={`dup-${index}`} className="mx-4 sm:mx-8 inline-block text-xs sm:text-sm">
             {news}
           </span>
         ))}

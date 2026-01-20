@@ -149,40 +149,40 @@ const GoverningPhase: React.FC = () => {
     <div className="min-h-screen bg-background oval-office-bg">
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gold text-sm uppercase tracking-wider font-semibold">The Oval Office</p>
-              <h1 className="headline-display text-2xl text-foreground">
+        <div className="container mx-auto px-4 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6">
+            <div className="min-w-0">
+              <p className="text-gold text-xs sm:text-sm uppercase tracking-wider font-semibold">The Oval Office</p>
+              <h1 className="headline-display text-lg sm:text-2xl text-foreground truncate">
                 President {playerName}
               </h1>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex flex-row items-center gap-2 sm:gap-6 flex-wrap">
               <div className="stat-card">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Day in Office</p>
-                <p className="text-2xl font-bold text-foreground">{daysInOffice}</p>
+                <p className="text-lg sm:text-2xl font-bold text-foreground">{daysInOffice}</p>
               </div>
               <Dialog open={showCabinetView} onOpenChange={setShowCabinetView}>
                 <DialogTrigger asChild>
                   <button className="stat-card cursor-pointer hover:border-primary/50 transition-all">
                     <p className="text-xs text-muted-foreground uppercase tracking-wider">Cabinet</p>
-                    <p className="text-2xl font-bold text-primary">{cabinet.length}</p>
+                    <p className="text-lg sm:text-2xl font-bold text-primary">{cabinet.length}</p>
                   </button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:hidden">
+                <DialogContent className="w-full max-w-2xl max-h-[80vh] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:hidden mx-auto px-4 sm:px-0">
                   <CabinetView cabinet={cabinet} onClose={() => setShowCabinetView(false)} />
                 </DialogContent>
               </Dialog>
               <div className="stat-card">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Approval</p>
-                <p className={`text-2xl font-bold ${approvalRating >= 50 ? 'text-victory' : approvalRating >= 30 ? 'text-gold' : 'text-destructive'}`}>
+                <p className={`text-lg sm:text-2xl font-bold ${approvalRating >= 50 ? 'text-victory' : approvalRating >= 30 ? 'text-gold' : 'text-destructive'}`}>
                   {approvalRating}%
                 </p>
               </div>
               <button
                 onClick={handleSaveAndExit}
                 disabled={isSaving}
-                className="px-4 py-2 bg-muted/50 hover:bg-muted border border-border rounded-lg text-sm transition-colors"
+                className="px-3 sm:px-4 py-2 bg-muted/50 hover:bg-muted border border-border rounded-lg text-xs sm:text-sm transition-colors whitespace-nowrap"
               >
                 {isSaving ? 'Saving...' : user ? '💾 Save & Exit' : '← Exit'}
               </button>
@@ -202,14 +202,14 @@ const GoverningPhase: React.FC = () => {
       {/* Approval warning */}
       {approvalRating < 30 && (
         <div className="bg-destructive/20 border-b border-destructive/50 px-4 py-2">
-          <p className="text-center text-destructive text-sm font-medium">
+          <p className="text-center text-destructive text-xs sm:text-sm font-medium">
             ⚠️ Warning: Your approval rating is critically low. The American people are losing faith.
           </p>
         </div>
       )}
 
-      <main className={`container mx-auto px-4 py-8 transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-        <div className="grid lg:grid-cols-3 gap-8">
+      <main className={`container mx-auto px-4 py-6 sm:py-8 transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Event card - takes 2 columns */}
           <div className="lg:col-span-2">
             {/* Show Cabinet Hiring UI when triggered */}
