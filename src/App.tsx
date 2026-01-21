@@ -20,7 +20,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <div className="relative min-h-screen">
-            <BrowserRouter>
+            <BrowserRouter basename="/president_simulator/">
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
